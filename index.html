@@ -1,1 +1,122 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Password Generator</title><link rel="stylesheet" href="style.css"></head><body><main><p class="tag">CYBER SECURITY PRACTICE PROJECT</p><h1>Password Generator</h1><p>Create a strong password for personal use. Nothing is saved or sent anywhere.</p><section><div class="output"><input id="password" readonly placeholder="Your password will appear here"><button onclick="copyPassword()">Copy</button></div><label>Password length: <b id="lengthValue">16</b></label><input id="length" type="range" min="8" max="32" value="16"><label><input id="upper" type="checkbox" checked> Uppercase letters</label><label><input id="lower" type="checkbox" checked> Lowercase letters</label><label><input id="numbers" type="checkbox" checked> Numbers</label><label><input id="symbols" type="checkbox" checked> Symbols</label><button class="generate" onclick="generate()">Generate secure password</button><div id="strength">Strength: —</div></section><article><h2>Why it matters</h2><p>Long, unique passwords and multi-factor authentication help protect accounts. A password manager can help people use unique passwords without needing to memorise them.</p></article></main><script src="script.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Password and Passphrase Generator</title>
+<meta name="description" content="Generate secure passwords and passphrases with your browser's cryptographic random generator, see their real strength in bits, and check if a password has appeared in a data breach without sending it anywhere.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="intro">
+    <h1>Make a password nobody can guess</h1>
+    <p>Generated in your browser with its cryptographic random generator. Nothing you create or check here is saved or sent anywhere.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Tools">
+    <button role="tab" id="tab-password" aria-controls="panel-password" aria-selected="true">Password</button>
+    <button role="tab" id="tab-passphrase" aria-controls="panel-passphrase" aria-selected="false" tabindex="-1">Passphrase</button>
+    <button role="tab" id="tab-check" aria-controls="panel-check" aria-selected="false" tabindex="-1">Check a password</button>
+  </div>
+
+  <!-- Password -->
+  <section id="panel-password" role="tabpanel" aria-labelledby="tab-password" class="panel">
+    <div class="output">
+      <output id="pw-out" class="secret" aria-live="polite"></output>
+      <div class="output-buttons">
+        <button type="button" class="primary" data-copy="pw-out">Copy</button>
+        <button type="button" id="pw-new">New password</button>
+      </div>
+    </div>
+    <div class="meter" id="pw-meter"></div>
+
+    <div class="controls">
+      <label class="slider">
+        <span>Length: <strong id="pw-length-value">20</strong> characters</span>
+        <input type="range" id="pw-length" min="8" max="64" value="20">
+      </label>
+      <fieldset class="checks">
+        <legend>Include</legend>
+        <label><input type="checkbox" id="pw-upper" checked> Capital letters</label>
+        <label><input type="checkbox" id="pw-lower" checked> Small letters</label>
+        <label><input type="checkbox" id="pw-numbers" checked> Numbers</label>
+        <label><input type="checkbox" id="pw-symbols" checked> Symbols</label>
+        <label><input type="checkbox" id="pw-lookalikes"> Avoid look-alikes (0 O 1 l I)</label>
+      </fieldset>
+      <p id="pw-error" class="error" role="alert" hidden></p>
+    </div>
+  </section>
+
+  <!-- Passphrase -->
+  <section id="panel-passphrase" role="tabpanel" aria-labelledby="tab-passphrase" class="panel" hidden>
+    <div class="output">
+      <output id="pp-out" class="secret" aria-live="polite"></output>
+      <div class="output-buttons">
+        <button type="button" class="primary" data-copy="pp-out">Copy</button>
+        <button type="button" id="pp-new">New passphrase</button>
+      </div>
+    </div>
+    <div class="meter" id="pp-meter"></div>
+
+    <div class="controls">
+      <label class="slider">
+        <span>Words: <strong id="pp-words-value">5</strong></span>
+        <input type="range" id="pp-words" min="3" max="10" value="5">
+      </label>
+      <label class="select">Separator
+        <select id="pp-sep">
+          <option value="-">Hyphen (-)</option>
+          <option value=".">Full stop (.)</option>
+          <option value=" ">Space</option>
+          <option value="_">Underscore (_)</option>
+        </select>
+      </label>
+      <fieldset class="checks">
+        <legend>Options</legend>
+        <label><input type="checkbox" id="pp-cap"> Capitalise each word</label>
+        <label><input type="checkbox" id="pp-num"> Add a number</label>
+      </fieldset>
+      <p class="hint">Random words are easier to remember and type than random characters. Five words from this 7,776-word list is about 65 bits. Use six or more for important accounts.</p>
+    </div>
+  </section>
+
+  <!-- Breach check -->
+  <section id="panel-check" role="tabpanel" aria-labelledby="tab-check" class="panel" hidden>
+    <form id="check-form" class="check-form">
+      <label for="check-input">Has this password appeared in a known data breach?</label>
+      <div class="check-row">
+        <input id="check-input" type="password" autocomplete="off" spellcheck="false" required>
+        <button type="button" id="check-show" aria-pressed="false">Show</button>
+        <button type="submit" class="primary">Check</button>
+      </div>
+    </form>
+    <div id="check-result" class="check-result" aria-live="polite"></div>
+    <details class="how">
+      <summary>How can this be safe?</summary>
+      <p>Your browser turns the password into a SHA-1 hash and sends only the <strong>first 5 characters</strong> of that hash to the <a href="https://haveibeenpwned.com/Passwords">Have I Been Pwned</a> Pwned Passwords service. The service sends back every leaked hash starting with those 5 characters, which is hundreds of them, and your browser checks the list itself. The password, and even its full hash, never leave this page.</p>
+    </details>
+  </section>
+
+  <section class="advice">
+    <h2>Good habits</h2>
+    <ul>
+      <li>Use a different password for every account. A password manager remembers them for you.</li>
+      <li>Turn on multi-factor authentication for email first, because it can reset everything else.</li>
+      <li>Length beats complexity. A long passphrase is stronger than a short jumble.</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="wrap site-footer">
+  Built by <a href="https://macroer16.github.io/victor-cloud-portfolio/">Victor Benson</a>.
+  <a href="https://github.com/macroer16/password-generator">Source code on GitHub</a>.
+  Passphrase words from the <a href="https://www.eff.org/dice">EFF wordlist</a> (CC BY 3.0 US). Breach data from <a href="https://haveibeenpwned.com/Passwords">Have I Been Pwned</a>.
+</footer>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>
